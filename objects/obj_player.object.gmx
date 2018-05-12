@@ -5,7 +5,7 @@
   <visible>-1</visible>
   <depth>-600</depth>
   <persistent>0</persistent>
-  <parentName>&lt;undefined&gt;</parentName>
+  <parentName>obj_npc_parent</parentName>
   <maskName>&lt;undefined&gt;</maskName>
   <events>
     <event eventtype="0" enumb="0">
@@ -28,12 +28,14 @@
             <string>canMove = true;
 canShoot = true;
 moveSpeed = 2;
+isAlly = true;
 
 fire = 0;
 fireRate = 7;
 
 direction = 90;
 image_angle = 90;
+propellerIndex = 0;
 </string>
           </argument>
         </arguments>
@@ -56,10 +58,11 @@ image_angle = 90;
         <arguments>
           <argument>
             <kind>1</kind>
-            <string>/*************** Shoot ***************/
+            <string>propellerIndex = (++propellerIndex) mod 7;
+/*************** Shoot ***************/
 if (canMove) {
     if (mouse_wheel_up() || keyboard_check(ord("W"))) {
-        if (global.height &lt; 0) {
+        if (global.height &lt; -MIN_HEIGHT) {
             global.height += 3;
         }
     }
@@ -83,12 +86,13 @@ if (canShoot) {
         if (fire &gt; 0) {
             fire -= fireRate;
             
-            shootBullet(x+5,y,10,90);
-            shootBullet(x-4,y,10,90);
+            shootBullet(x+5,y,20,90);
+            shootBullet(x-4,y,20,90);
         }
     }
 }
-
+image_speed = 0;
+image_index = clamp(((mouse_x-x)/5)+15,0,29);
 if (fire &lt;= 0) {fire++;}
 </string>
           </argument>
@@ -112,7 +116,7 @@ if (fire &lt;= 0) {fire++;}
         <arguments>
           <argument>
             <kind>1</kind>
-            <string>if ((other.shotFrom).object_index == obj_enemy_parent) {
+            <string>if (!(other.shotFrom).isAlly) {
     var heightDiff = abs(other.depth-depth);
     
     if ((-10 &lt;= heightDiff) &amp;&amp; (heightDiff &lt;= 10)) {
@@ -120,6 +124,30 @@ if (fire &lt;= 0) {fire++;}
         instance_destroy(other);
     }
 }
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="8" enumb="0">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>draw_self();
+draw_sprite_ext(spr_propeller,propellerIndex,x+lengthdir_x(8,direction),y+lengthdir_y(8,direction),1,1,direction,white,1);
 </string>
           </argument>
         </arguments>

@@ -8,8 +8,14 @@
   <sprites name="sprites">
     <sprite>sprites\spr_player</sprite>
     <sprite>sprites\spr_enemy</sprite>
+    <sprite>sprites\spr_kill_animation</sprite>
+    <sprite>sprites\spr_enemy2</sprite>
     <sprite>sprites\spr_bullet</sprite>
     <sprite>sprites\spr_odometer</sprite>
+    <sprite>sprites\spr_altitude_gui</sprite>
+    <sprite>sprites\spr_font_number</sprite>
+    <sprite>sprites\spr_radar</sprite>
+    <sprite>sprites\spr_propeller</sprite>
   </sprites>
   <backgrounds name="background">
     <background>background\bkg_water</background>
@@ -20,18 +26,25 @@
     <script>scripts\shootBullet.gml</script>
     <script>scripts\inViewRange.gml</script>
     <script>scripts\print.gml</script>
+    <script>scripts\inSquare.gml</script>
+    <script>scripts\findEnemy.gml</script>
+    <script>scripts\numberOfEnemies.gml</script>
   </scripts>
   <objects name="objects">
     <object>objects\obj_player</object>
     <object>objects\obj_bullet</object>
-    <object>objects\obj_enemy_parent</object>
+    <object>objects\obj_npc_parent</object>
     <object>objects\obj_control</object>
     <object>objects\obj_enemy1</object>
+    <object>objects\obj_enemy2</object>
+    <object>objects\obj_ally</object>
+    <object>objects\obj_explosion_sharpnel</object>
   </objects>
   <rooms name="rooms">
     <room>rooms\room0</room>
   </rooms>
-  <constants number="9">
+  <constants number="10">
+    <constant name="MIN_HEIGHT">5</constant>
     <constant name="MAX_HEIGHT">1000</constant>
     <constant name="yellow">c_yellow</constant>
     <constant name="orange">c_orange</constant>

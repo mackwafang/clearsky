@@ -29,10 +29,116 @@
 for (var i = 0; i &lt; 3; i++) {
     heightOdo[i] = -global.height/power(10,i);
 }
+global.enemyList = ds_list_create();
+ds_list_add(global.enemyList,obj_enemy1);
+ds_list_add(global.enemyList,obj_enemy2);
 
-view_xview[0] = -120;
-view_yview[0] = -160;
+global.kill = 0;
+killDisplay = 0;
+killAnimation = 0;
+playKillAnimation = false;
+scoreDisplay = score;
+
+global.scoreFont = font_add_sprite_ext(spr_font_number,"x-0123456789",true,2);
+
 display_set_gui_size(view_wport[0],view_hport[0]);
+alarm[0] = 150;
+alarm[1] = 90*60;
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="2" enumb="1">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>alarm[0] = 20*60;
+global.kill = 0;
+alarm[1] = 110*60;
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="2" enumb="0">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>
+if (instance_number(obj_npc_parent) &lt; 10) {
+    var spawnLocation = irandom(3);
+    var enemy = ds_list_find_value(global.enemyList,irandom(ds_list_size(global.enemyList)-1));
+    switch(spawnLocation) {
+        case 0:
+            var o = instance_create(room_width,irandom(room_height),enemy);
+            o.direction = 180;
+            break;
+        case 1:
+            var o = instance_create(irandom(room_width),0,enemy);
+            o.direction = 270;
+            break;
+        case 2:
+            var o = instance_create(0,irandom(room_height),enemy);
+            o.direction = 0;
+            break;
+        case 3:
+            var o = instance_create(irandom(room_width),room_height,enemy);
+            o.direction = 90;
+            break;
+    }
+}
+alarm[0] = 150;
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="3" enumb="0">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>background_vspeed[0] = max((global.height*0.01)+11,0.25);
+global.height = clamp(global.height,-MAX_HEIGHT,-MIN_HEIGHT);
 </string>
           </argument>
         </arguments>
@@ -60,6 +166,11 @@ var yv = view_yview[0];
 var wv = view_wport[0];
 var hv = view_hport[0];
 
+draw_set_valign(fa_top);
+draw_set_halign(fa_right);
+draw_text_colour(wv,0,string(fps)+"#"+string(alarm[0] div 60)+"#"+string(alarm[1] div 60),white,white,white,white,1);
+/*********** Altitude Odometer **********/
+draw_sprite(spr_altitude_gui,0,wv,hv);
 for (var i = 0; i &lt; 3; i++) {
     if (i == 0) {
         heightOdo[i] = var_wipe(heightOdo[i],floor(-global.height/power(10,i)),100,0.1,0);
@@ -67,9 +178,72 @@ for (var i = 0; i &lt; 3; i++) {
     else {
         heightOdo[i] = var_wipe(heightOdo[i],heightOdo[i-1] div 10,100,0.1,0);
     }
-    draw_sprite_ext(spr_odometer,8+(heightOdo[i])*8,wv-28-(i*28),hv-36,4,4,0,white,1);
+    draw_sprite_ext(spr_odometer,8+(heightOdo[i])*8,wv-21-(i*21),hv-27-12,3,3,0,white,1);
 }
-
+/*********** Radar **********/
+var enemiesAbove = numberOfEnemies("above");
+var enemiesBelow = numberOfEnemies("below");
+var enemiesAt = numberOfEnemies("at");
+var index = 0;
+if ((enemiesAbove &gt; 0) &amp;&amp; (enemiesBelow &gt; 0)) { 
+    index = 6;
+    if (enemiesAt &gt; 0) {
+        index = 7;
+    }
+}
+else {
+    if (enemiesAbove &gt; 0) {
+        index = 2;
+        if (enemiesAt &gt; 0) {
+            index = 4;
+        }
+    }
+    else if (enemiesBelow &gt; 0) {
+        index = 3;
+        if (enemiesAt &gt; 0) {
+            index = 5;
+        }
+    }
+    else if (enemiesAt &gt; 0) {
+        index = 1
+    }
+}
+draw_sprite(spr_radar,index,wv/2,hv-32);
+draw_set_valign(fa_top);
+draw_set_halign(fa_left);
+draw_set_colour(white);
+draw_text((wv/2)+1,hv-50,enemiesAbove);
+draw_text((wv/2)+1,hv-33,enemiesAt);
+draw_text((wv/2)+1,hv-14,enemiesBelow);
+draw_set_colour(white);
+/*********** Score **********/
+draw_set_font(global.scoreFont);
+draw_set_valign(fa_bottom);
+draw_set_halign(fa_left);
+scoreDisplay = var_wipe(scoreDisplay,score,100,0,7);
+draw_text_transformed_colour(0,hv,scoreDisplay,2,2,0,white,white,white,white,1);
+/*********** Kill Display **********/
+if (global.kill-killDisplay &gt; 0) {
+    if (killAnimation++ == 34) {
+        killDisplay++;
+        killAnimation = 0;
+        if (killDisplay mod 15 == 0) {
+            var a = instance_create(0,0,obj_ally);
+            a.allyID = instance_number(obj_ally);
+        }
+    }
+}
+else if (global.kill-killDisplay &lt; 0) {
+    if (killAnimation-- == 0) {
+        killDisplay--;
+        killAnimation = 34;
+        score += 250;
+    }
+}
+draw_sprite(spr_kill_animation,killAnimation,(killDisplay mod 15) * 16, (killDisplay div 15) * 16);
+for (var i = 0; i &lt; killDisplay; i++) {
+    draw_sprite(spr_kill_animation,34,(i mod 15) * 16, (i div 15) * 16);
+}
 </string>
           </argument>
         </arguments>

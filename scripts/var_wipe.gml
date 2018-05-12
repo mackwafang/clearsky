@@ -12,9 +12,16 @@ if(constant == 0){
     return fake; //Return in percent
 }
 else{
-    actual = (actual_min/actual_max)*100 //Get percent
     //fake = fake+(((actual-fake)/abs(actual-fake))*constant) // Find Difference
-    if(actual-fake < 0) {fake -= constant;}
-    if(actual-fake > 0) {fake += constant;}
+    if (actual_min-fake != 0) {
+        var inc = sign(actual_min-fake)*constant;
+        if (inc > 0) {
+            fake += min(inc,actual_min-fake);
+        }
+        else if (inc < 0) {
+            fake += max(inc,actual_min-fake);
+        }
+    }
+    //if (actual_min-fake > 0) {fake += min(constant,actual_min-constant);}
     return fake; //Return in percent
 }

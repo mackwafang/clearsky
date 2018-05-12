@@ -19,7 +19,6 @@ if (instance_exists(target) || instance_exists(from)) {
         var l2 = sqrt(sqr(x2)+sqr(y2));
         /* angle between two vectors */
         var a = arccos(dot_product(x1,y1,x2,y2) / max(1,l1*l2))*(180/pi);
-        print(a);
         if (a <= angle) {
             return true;
         }
