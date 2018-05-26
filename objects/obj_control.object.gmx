@@ -31,13 +31,18 @@ for (var i = 0; i &lt; 3; i++) {
 }
 global.enemyList = ds_list_create();
 ds_list_add(global.enemyList,obj_enemy1);
-ds_list_add(global.enemyList,obj_enemy2);
+//ds_list_add(global.enemyList,obj_enemy2);
 
 global.kill = 0;
 killDisplay = 0;
 killAnimation = 0;
 playKillAnimation = false;
 scoreDisplay = score;
+
+for (var i = 0; i &lt; ALLY_LIMIT; i++) {
+    allyHealthBarMove[i] = 0;
+    allyHealthDisplay[i] = 0;
+}
 
 global.scoreFont = font_add_sprite_ext(spr_font_number,"x-0123456789",true,2);
 
@@ -91,8 +96,7 @@ alarm[1] = 110*60;
         <arguments>
           <argument>
             <kind>1</kind>
-            <string>
-if (instance_number(obj_npc_parent) &lt; 10) {
+            <string>if (numberOfEnemies() &lt; 10) {
     var spawnLocation = irandom(3);
     var enemy = ds_list_find_value(global.enemyList,irandom(ds_list_size(global.enemyList)-1));
     switch(spawnLocation) {
@@ -165,10 +169,6 @@ global.height = clamp(global.height,-MAX_HEIGHT,-MIN_HEIGHT);
 var yv = view_yview[0];
 var wv = view_wport[0];
 var hv = view_hport[0];
-
-draw_set_valign(fa_top);
-draw_set_halign(fa_right);
-draw_text_colour(wv,0,string(fps)+"#"+string(alarm[0] div 60)+"#"+string(alarm[1] div 60),white,white,white,white,1);
 /*********** Altitude Odometer **********/
 draw_sprite(spr_altitude_gui,0,wv,hv);
 for (var i = 0; i &lt; 3; i++) {
@@ -209,8 +209,8 @@ else {
     }
 }
 draw_sprite(spr_radar,index,wv/2,hv-32);
-draw_set_valign(fa_top);
-draw_set_halign(fa_left);
+draw_set_valign(fa_center);
+draw_set_halign(fa_middle);
 draw_set_colour(white);
 draw_text((wv/2)+1,hv-50,enemiesAbove);
 draw_text((wv/2)+1,hv-33,enemiesAt);
@@ -228,8 +228,10 @@ if (global.kill-killDisplay &gt; 0) {
         killDisplay++;
         killAnimation = 0;
         if (killDisplay mod 15 == 0) {
-            var a = instance_create(0,0,obj_ally);
-            a.allyID = instance_number(obj_ally);
+            if (instance_number(obj_ally) &lt; ALLY_LIMIT) {
+                var a = instance_create(0,0,obj_ally);
+                a.allyID = instance_number(obj_ally);
+            }
         }
     }
 }
@@ -244,6 +246,38 @@ draw_sprite(spr_kill_animation,killAnimation,(killDisplay mod 15) * 16, (killDis
 for (var i = 0; i &lt; killDisplay; i++) {
     draw_sprite(spr_kill_animation,34,(i mod 15) * 16, (i div 15) * 16);
 }
+/*********** Ally Health **********/
+for (var i = 0; i &lt; ALLY_LIMIT; i++) {
+    if (instance_find(obj_ally,i) == noone) {
+        allyHealthBarMove[i] = 0;
+        allyHealthDisplay[i] = 0;
+    }
+}
+for (var i = 0; i &lt; instance_number(obj_ally); i++) {
+    var h = 24;
+    var w = 128;
+    var border = 2;
+    var yy = ((i*15) div 15) * h;
+    draw_rectangle_colour(wv-allyHealthBarMove[i],yy,wv-allyHealthBarMove[i]+w,yy+h,0,0,0,0,false);
+    draw_rectangle_colour(wv-allyHealthBarMove[i]+border,yy+border,wv-allyHealthBarMove[i]+w-border,yy+h-border,$999999,$999999,$999999,$999999,false);
+    draw_sprite(spr_player,14,wv-allyHealthBarMove[i]+10,yy+h/2);
+    
+    var o = instance_find(obj_ally,i);
+    if (o.hp &lt;= 0) {
+        draw_sprite(spr_ally_destroyed,0,wv-allyHealthBarMove[i],yy);
+    }
+    else {
+        if (allyHealthBarMove[i] &lt; 128) {
+            allyHealthBarMove[i] += 4;
+        }
+    }
+    allyHealthDisplay[i] = var_wipe(allyHealthDisplay[i],max(0,o.hp/o.maxHP)*(w-6-30),100,0,0.2);
+    draw_rectangle_colour(wv-allyHealthBarMove[i]+30,yy+border+4,wv-allyHealthBarMove[i]+30+(allyHealthDisplay[i]),yy+h-border-4,green,green,green,green,false);
+}
+/*********** Onscreen debug **********/
+draw_set_valign(fa_top);
+draw_set_halign(fa_right);
+draw_text_colour(wv,0,string(fps)+"#"+string(alarm[0] div 60)+"#"+string(alarm[1] div 60),white,white,white,white,1);
 </string>
           </argument>
         </arguments>

@@ -27,7 +27,10 @@
             <kind>1</kind>
             <string>event_inherited();
 isAlly = true;
-hp = 2;
+maxHP = 7;
+hp = maxHP;
+turnRateCof = 1.2;
+fovAngle = 2;
 fireRate = 8;
 </string>
           </argument>

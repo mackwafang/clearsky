@@ -16,6 +16,7 @@
     <sprite>sprites\spr_font_number</sprite>
     <sprite>sprites\spr_radar</sprite>
     <sprite>sprites\spr_propeller</sprite>
+    <sprite>sprites\spr_ally_destroyed</sprite>
   </sprites>
   <backgrounds name="background">
     <background>background\bkg_water</background>
@@ -43,7 +44,8 @@
   <rooms name="rooms">
     <room>rooms\room0</room>
   </rooms>
-  <constants number="10">
+  <constants number="11">
+    <constant name="ALLY_LIMIT">5</constant>
     <constant name="MIN_HEIGHT">5</constant>
     <constant name="MAX_HEIGHT">1000</constant>
     <constant name="yellow">c_yellow</constant>

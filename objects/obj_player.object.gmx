@@ -29,6 +29,7 @@
 canShoot = true;
 moveSpeed = 2;
 isAlly = true;
+isDestroyed = false;
 
 fire = 0;
 fireRate = 7;

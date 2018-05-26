@@ -31,8 +31,9 @@ smokeType = part_type_create();
 part_type_sprite(smokeType,spr_bullet,false,false,false);
 part_type_alpha2(smokeType,1,0);
 part_type_color2(smokeType,yellow,0);
-part_type_speed(smokeType,1,1,0,0);
-part_type_direction(smokeType,270,270,0,0);
+//part_type_speed(smokeType,1,1,0,0);
+//part_type_direction(smokeType,270,270,0,0);
+part_type_life(smokeType,60,60);
 
 
 canMove = true;
@@ -47,6 +48,7 @@ allyID = 0;
 hp = 10;
 maxHP = 10;
 propellerIndex = 0; //for animating propeller
+decayRate = 0.01;
 
 changeHeightRange = 100; //If player is outside of this range, give chase
 heightScale = 1; //scaling based on height
@@ -54,7 +56,39 @@ fire = 0;
 fireRate = 15;
 heightDiff = 0;
 fovRange = 300;
-fovAngle = 60;
+fovAngle = 15;
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="2" enumb="1">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>
+repeat(5) effect_create_above(ef_smoke,x,y,0.25,0);
+for (var i = 0; i &lt; 5; i++) {
+    var o = instance_create(x,y,obj_explosion_sharpnel);
+    o.direction = irandom(360);
+    o.speed = 1;
+}
+sprite_index = -1;
+mask_index = -1;
+alarm[0] = 90;
 </string>
           </argument>
         </arguments>
@@ -106,81 +140,77 @@ instance_destroy();
 /*************** Height difference *****************/
 heightDiff = global.height-depth;
 
-if (heightDiff-changeHeightRange &lt; heightDiff &amp;&amp; heightDiff &lt; heightDiff+changeHeightRange) {
-    depth = var_wipe(depth,global.height,100,0,1);
-}
 heightScale = (depth/global.height);
 image_xscale = heightScale;
 image_yscale = heightScale;
 image_xscale = clamp(image_xscale,0,3);
 image_yscale = clamp(image_yscale,0,3);
 
-/*************** Dies *****************/
 image_speed = 0;
 image_angle = direction;
 part_type_scale(smokeType,2+heightScale,2+heightScale);
+if (isAlly) {
+    hp -= maxHP*decayRate/100;
+}
+if ((hp &lt; 2) &amp;&amp; alarm[1] &gt;= 0)  {
+    part_system_depth(smokeSystem,depth-1);
+    part_particles_create(smokeSystem,x-1+irandom_range(-1,1),y-5,smokeType,10);
+}
 if (!isDestroyed) {
-    if (hp &lt; 2) {
-        part_system_depth(smokeSystem,depth-1);
-        part_particles_create(smokeSystem,x-1+irandom_range(-1,1),y-5,smokeType,10);
-    }
+    /*************** Dies *****************/
     if (hp &lt; 0) {
         global.kill ++;
         score += 500;
-        repeat(5) effect_create_above(ef_smoke,x,y,0.25,0);
-        for (var i = 0; i &lt; 5; i++) {
-            var o = instance_create(x,y,obj_explosion_sharpnel);
-            o.direction = irandom(360);
-            o.speed = 1;
-        }
-        sprite_index = -1;
-        mask_index = -1;
-        alarm[0] = 90;
         isDestroyed = true;
+        alarm[1] = irandom_range(15,90);
+    }
+    if (heightDiff-changeHeightRange &lt; heightDiff &amp;&amp; heightDiff &lt; heightDiff+changeHeightRange) {
+        depth = var_wipe(depth,global.height,100,0,1);
     }
     /*************** chase player *****************/
     if (fire &lt;= 0) {fire++;}
     var turnRate = 0;
     if (chaseTarget != undefined) {
+        /* target exists */
         if (instance_exists(chaseTarget)) {
-            turnRate = turnRateCof*sign(angle_difference(direction,point_direction(chaseTarget.x,chaseTarget.y,x,y)))*1.5;
-            if (inViewRange(chaseTarget,fovAngle,fovRange)) {
-                if ((-10 &lt;= heightDiff) &amp;&amp; (heightDiff &lt;= 10)) {
-                    if (fire &gt; 0) {
-                        fire -= fireRate;
-                        if (isAlly) {
-                            var l = point_distance(x,y,x+4,y+4);
-                            var d = point_direction(x,y,x+2,y+4);
-                            var xx = x+lengthdir_x(l,d+direction);
-                            var yy = y+lengthdir_y(l,d+direction);
-                            shootBullet(xx,yy,10,image_angle);
-                            
-                            l = point_distance(x,y,x+2,y-4);
-                            d = point_direction(x,y,x+2,y-4);
-                            xx = x+lengthdir_x(l,d+direction);
-                            yy = y+lengthdir_y(l,d+direction);
-                            shootBullet(xx,yy,10,image_angle);
-                        }
-                        else {
-                            switch(object_index) {
-                                case obj_enemy1:
-                                    shootBullet(x,y,10,image_angle);
-                                    break;
-                                case obj_enemy2:
-                                    var dir = point_direction(x,y,chaseTarget.x,chaseTarget.y);
-                                    repeat(2) shootBullet(x,y,10,dir+irandom_range(-5,5));
-                                    break;
+            if (!chaseTarget.isDestroyed) {
+                turnRate = turnRateCof*sign(angle_difference(direction,point_direction(chaseTarget.x,chaseTarget.y,x,y)))*1.5;
+                if (inViewRange(chaseTarget,fovAngle,fovRange)) {
+                    if ((-10 &lt;= heightDiff) &amp;&amp; (heightDiff &lt;= 10)) {
+                        if (fire &gt; 0) {
+                            fire -= fireRate;
+                            if (isAlly) {
+                                var l = point_distance(x,y,x+4,y+4);
+                                var d = point_direction(x,y,x+2,y+4);
+                                var xx = x+lengthdir_x(l,d+direction);
+                                var yy = y+lengthdir_y(l,d+direction);
+                                shootBullet(xx,yy,10,image_angle);
+                                
+                                l = point_distance(x,y,x+2,y-4);
+                                d = point_direction(x,y,x+2,y-4);
+                                xx = x+lengthdir_x(l,d+direction);
+                                yy = y+lengthdir_y(l,d+direction);
+                                shootBullet(xx,yy,10,image_angle);
+                            }
+                            else {
+                                switch(object_index) {
+                                    case obj_enemy1:
+                                        shootBullet(x,y,10,image_angle);
+                                        break;
+                                    case obj_enemy2:
+                                        var dir = point_direction(x,y,chaseTarget.x,chaseTarget.y);
+                                        repeat(2) shootBullet(x,y,10,dir+irandom_range(-5,5));
+                                        break;
+                                }
                             }
                         }
                     }
                 }
-                fovAngle = 15;
-            }
-            else {
-                var border_width = 32;
-                turnRate *= 0.01*heightScale*abs(angle_difference(direction,point_direction(chaseTarget.x,chaseTarget.y,x,y)));
-                direction += turnRate;
-                fovAngle = 60;
+                else {
+                    var border_width = 32;
+                    turnRate *= 0.01*heightScale*abs(angle_difference(direction,point_direction(chaseTarget.x,chaseTarget.y,x,y)));
+                    direction += turnRate;
+                }
             }
         }
         else {
@@ -189,19 +219,17 @@ if (!isDestroyed) {
         image_index = clamp((-turnRate*2)+15,0,29);
     }
     else {
+        /* target does not exists */
         chaseTarget = findEnemy();
         if (isAlly) {
-            var xx = obj_player.x+8+(power(-1,allyID)*(allyID*16));
-            var yy = obj_player.y+(((allyID div 2)+1)*16);
-            image_index = obj_player.image_index;
-            x = var_wipe(x,xx,100,0.05,0);
-            y = var_wipe(y,yy,100,0.05,0);
-            speed = 0;
-            direction += sign(angle_difference(90,direction))*3*turnRateCof;
-            //turnRate = sign(angle_difference(direction,point_direction(xx,yy,x,y)))*3;
+            turnRate = turnRateCof*sign(angle_difference(direction,point_direction(obj_player.x,obj_player.y,x,y)))*1.5;
+            direction += turnRate;
         }
     }
     speed = var_wipe(speed,moveSpeed*heightScale,100,0.05,0);
+}
+else {
+    depth += 1;
 }
 </string>
           </argument>
@@ -256,9 +284,10 @@ if (!isDestroyed) {
         <arguments>
           <argument>
             <kind>1</kind>
-            <string>if (!isDestroyed) {
+            <string>if (sprite_index != -1) {
     draw_self();
-    draw_sprite_ext(spr_propeller,propellerIndex,x+lengthdir_x(8*heightScale,direction),y+lengthdir_y(8*heightScale,direction),heightScale,heightScale,direction,white,1);
+    //draw_line(x,y,x+lengthdir_x(fovRange,fovAngle+direction),y+lengthdir_y(fovRange,fovAngle+direction));
+    //draw_line(x,y,x+lengthdir_x(fovRange,-fovAngle+direction),y+lengthdir_y(fovRange,-fovAngle+direction));
 }
 </string>
           </argument>
